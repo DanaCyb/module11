@@ -1,18 +1,115 @@
-function Phone(brand, price, color, camera) {
-    this.brand = brand;
-    this.price = price;
-    this.color = color;
-    this.camera = camera;
-}
+$(function(){
+    var board = {
+        name: 'Kanban Board',
+        addColumn: function(column) {
+            this.$element.append(column.$element);
+            initSortable();
+        },
+        $element: $('#board .column-container')
+    };
 
-Phone.prototype.printInfo = function() {
-    console.log("The phone brand is " + this.brand + ", color is " + this.color + " and the price is " + this.price + "Camera is  " + this.camera + ".");
-}
+    function randomString() {
+        var chars = '0123456789abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXTZ';
+        var str = '';
+        for (var i = 0; i < 10; i++) {
+            str += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return str;
+    }
 
-var iPhone6S = new Phone("Apple", 2250, "silver", "5.0 Mpix - przód, 12.0 Mpix - tył");
-var SamsungGalaxyS6 =new Phone("Samsung", 1534, "black", "16 Mpix - tył i 5 Mpix - przód");
-var OnePlusOne = new Phone("One Plus", 1299, "black", "13 Mpix");
+    function Column(name) {
+        var self = this; 
 
-iPhone6S.printInfo();
-SamsungGalaxyS6.printInfo();
-OnePlusOne.printInfo();
+        this.id = randomString();
+        this.name = name;
+        this.$element = createColumn();
+
+        function createColumn() {
+            var $column = $('<div>').addClass('column');
+            var $columnTitle = $('<h2>').addClass('column-title').text(self.name);
+            var $columnCardList = $('<ul>').addClass('column-card-list');
+            var $columnDelete = $('<button>').addClass('btn-delete').text('x');
+            var $columnAddCard = $('<button>').addClass('add-card').text('Add a card');
+
+            $columnDelete.on('click',function() {
+                self.removeColumn();
+            });
+
+            $columnAddCard.on('click',function() {
+                self.addCard(new Card(prompt("Enter the name of the card")));
+            });
+
+            $column.append($columnTitle)
+                .append($columnDelete)
+                .append($columnAddCard)
+                .append($columnCardList);
+
+            return $column;
+        }
+    }
+
+    Column.prototype = {
+        addCard: function(card) {
+            this.$element.children('ul').append(card.$element);
+        },
+        removeColumn: function() {
+            this.$element.remove();
+        }
+    };
+
+    function Card(description) {
+        var self = this;
+
+        this.id = randomString();
+        this.description = description;
+        this.$element = createCard();
+
+        function createCard() {
+            var $card = $('<li>').addClass('card');
+            var $cardDescription = $('<p>').addClass('card-description').text(self.description);
+            var $cardDelete = $('<button>').addClass('btn-delete').text('x');
+
+            $cardDelete.on('click',function(){
+                self.removeCard();
+            });
+
+            $card.append($cardDelete)
+                .append($cardDescription);
+            return $card;
+        }
+
+        Card.prototype = {
+            removeCard: function() {
+                this.$element.remove();
+            }
+        };
+
+    }
+
+
+    function initSortable() {
+        $('.column-card-list').sortable({
+            connectWith: '.column-card-list',
+            placeholder: 'card-placeholder'
+        }).disableSelection();
+    }
+
+    $('.create-column')
+        .on('click',function(){
+        var name = prompt('Enter a column name');
+        var column = new Column(name);
+        board.addColumn(column);
+    });
+
+    var todoColumn = new Column('To do');
+    var doingColumn = new Column('Doing');
+    var doneColumn = new Column('Done');
+    var card1 = new Card('New task');
+    var card2 = new Card('Create kanban boards');
+
+    board.addColumn(todoColumn);
+    board.addColumn(doingColumn);
+    board.addColumn(doneColumn);
+    todoColumn.addCard(card1);
+    doingColumn.addCard(card2);  
+});
